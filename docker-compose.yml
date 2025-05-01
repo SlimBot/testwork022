@@ -1,0 +1,44 @@
+services:
+  php:
+    build:
+      context: ./.docker/php
+      dockerfile: Dockerfile
+    volumes:
+      - ./.docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
+      - .:/var/www/html:delegated
+    environment:
+      PHP_USER_ID: 1000
+    depends_on:
+      - mysql
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./.docker/nginx:/etc/nginx/conf.d/
+      - .:/var/www/html:delegated
+    depends_on:
+      - php
+    ports:
+      - 80:80
+      - 443:443
+
+  mysql:
+    image: mysql:8.0.30
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysqldata:/var/lib/mysql/
+      - ./.docker/mysql/initdb.d:/docker-entrypoint-initdb.d
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: admin
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+
+volumes:
+  mysqldata:
+
+
